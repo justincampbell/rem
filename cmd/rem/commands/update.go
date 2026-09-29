@@ -2,6 +2,7 @@ package commands
 
 import (
 	"fmt"
+	"os"
 	"strings"
 	"time"
 
@@ -172,6 +173,10 @@ var updateCmd = &cobra.Command{
 			}
 		}
 
+		if !remindChanged {
+			dropAlarmsForAllDay(r, updates)
+		}
+
 		if len(updates) == 0 {
 			return fmt.Errorf("no updates specified")
 		}
@@ -212,6 +217,29 @@ func init() {
 	updateCmd.Flags().BoolVarP(&updateForce, "yes", "y", false, "Skip the shared-list move confirmation (alias for --force)")
 
 	rootCmd.AddCommand(updateCmd)
+}
+
+// dropAlarmsForAllDay removes "at the due time" alarms when the updates turn
+// a timed due into an all-day one: with no time of day, the alarm would fire
+// at midnight. Callers skip it when --remind-me sets the alarms explicitly.
+func dropAlarmsForAllDay(r *reminder.Reminder, updates map[string]any) {
+	if allDay, _ := updates["due_all_day"].(bool); !allDay || r.AllDay || r.DueDate == nil {
+		return
+	}
+	current := r.Alarms
+	if v, ok := updates["alarms"]; ok {
+		current, _ = v.([]reminder.Alarm) // nil means all alarms are being cleared
+	}
+	kept, dropped := dropDueTimeAlarms(current)
+	if !dropped {
+		return
+	}
+	if len(kept) == 0 {
+		updates["alarms"] = nil
+	} else {
+		updates["alarms"] = kept
+	}
+	fmt.Fprintln(os.Stderr, "Note: removed the alarm at the due time, since an all-day due has no time. Use --remind-me to set one.")
 }
 
 // confirmSharedMove prompts before a move that involves a shared list, where
@@ -416,6 +444,8 @@ func runUpdateInteractive(idArg string) error {
 			updates["due_all_day"] = allDay
 		}
 	}
+
+	dropAlarmsForAllDay(r, updates)
 
 	if newFlagged != r.Flagged {
 		updates["flagged"] = newFlagged

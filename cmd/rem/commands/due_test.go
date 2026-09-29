@@ -4,6 +4,8 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/BRO3886/rem/internal/reminder"
 )
 
 func TestParseDueAt(t *testing.T) {
@@ -70,5 +72,28 @@ func TestParseDueAt(t *testing.T) {
 				t.Errorf("allDay = %v, want %v", allDay, tt.wantAllDay)
 			}
 		})
+	}
+}
+
+func TestDropDueTimeAlarms(t *testing.T) {
+	abs := time.Date(2026, 9, 30, 8, 0, 0, 0, time.Local)
+	loc := &reminder.AlarmLocation{Latitude: 1, Longitude: 2, Proximity: "enter"}
+	alarms := []reminder.Alarm{
+		{RelativeOffset: 0},                 // auto alarm at the due time: dropped
+		{RelativeOffset: -15 * time.Minute}, // explicit offset: kept
+		{AbsoluteDate: &abs},                // absolute: kept
+		{Location: loc},                     // geofence: kept
+	}
+
+	got, dropped := dropDueTimeAlarms(alarms)
+	if !dropped {
+		t.Error("dropped = false, want true")
+	}
+	if len(got) != 3 || got[0].RelativeOffset != -15*time.Minute || got[1].AbsoluteDate == nil || got[2].Location == nil {
+		t.Errorf("kept = %+v", got)
+	}
+
+	if _, dropped := dropDueTimeAlarms(got); dropped {
+		t.Error("no zero-offset alarm left, dropped should be false")
 	}
 }

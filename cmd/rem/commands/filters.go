@@ -139,6 +139,23 @@ func buildAlarms(hasDueDate bool, remindMe string, silent bool) ([]reminder.Alar
 	return nil, nil
 }
 
+// dropDueTimeAlarms removes "at the due time" alarms (zero relative offset,
+// the kind buildAlarms adds by default) and reports whether it removed any.
+// Used when a timed due becomes all-day: with no time of day, such an alarm
+// would fire at midnight. Offset, absolute, and location alarms are kept.
+func dropDueTimeAlarms(alarms []reminder.Alarm) ([]reminder.Alarm, bool) {
+	var kept []reminder.Alarm
+	dropped := false
+	for _, a := range alarms {
+		if a.RelativeOffset == 0 && a.AbsoluteDate == nil && a.Location == nil {
+			dropped = true
+			continue
+		}
+		kept = append(kept, a)
+	}
+	return kept, dropped
+}
+
 // parseLocationAlarm builds a geofence alarm from the --location, --radius,
 // and --on-arrive/--on-leave flag values. The location format is "lat,lng"
 // (e.g. "37.3318,-122.0312"). Proximity defaults to arrive when neither flag

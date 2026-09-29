@@ -105,7 +105,8 @@ A due date with no time of day is saved as a true all-day reminder (Reminders.ap
 - `rem add "Pack" --due friday --all-day` → all-day. Without `--all-day`, natural-language days like `friday` or `tomorrow` default to 9 AM
 - `rem update AB12 --all-day` → turns the current due date into an all-day one on the same date
 - `rem update AB12 --due monday` on an all-day reminder keeps it all-day; give a time (`--due "monday 2pm"`) to make it timed
-- JSON output marks all-day reminders with `"due_all_day": true`
+- JSON output marks all-day reminders with `"due_all_day": true`. That reflects how Reminders.app displays the reminder, so a reminder the app shows at 12:00 AM (and overdue) reads as timed even if another tool marked it all-day.
+- To repair a reminder the app shows at 12:00 AM when it should be all-day, run `rem update <id> --all-day`. It keeps the date and removes the midnight "at due time" alarm.
 
 ## Notifications default to ON
 

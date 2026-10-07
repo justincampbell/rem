@@ -193,6 +193,7 @@ type Reminder struct {
 	Completed        bool
 	URL              string // native EventKit URL field (backwards compat: extracted from body if empty)
 	Tags             []string
+	ParentID         string // ID of the reminder this is a subtask of; "" when top-level
 	Recurring        bool
 	RecurrenceRules  []RecurrenceRule
 	HasAlarms        bool

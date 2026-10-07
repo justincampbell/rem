@@ -22,6 +22,7 @@ var (
 	updateAddTagsBulk    string
 	updateRemoveTagsBulk string
 	updateList           string
+	updateParent         string
 	updateRemindMe       string
 	updateRepeat         string
 	updateInteractive    bool
@@ -43,6 +44,8 @@ var updateCmd = &cobra.Command{
   rem update abc12345 --notes "Updated notes" --priority medium
   rem edit abc12345 --title "New title"
   rem update abc12345 --list "Work"
+  rem update abc12345 --parent def67890        # make it a subtask of def67890
+  rem update abc12345 --parent none            # make it top-level again
   rem update abc12345 --remind-me 15m
   rem update abc12345 --repeat "weekly on mon,fri"
   rem update abc12345 --repeat none
@@ -122,6 +125,18 @@ var updateCmd = &cobra.Command{
 		}
 		if cmd.Flags().Changed("list") {
 			updates["list"] = updateList
+		}
+		if cmd.Flags().Changed("parent") {
+			// A move into or out of a shared list copies the reminder to a
+			// new ID, so the two don't combine in one update.
+			if cmd.Flags().Changed("list") {
+				return fmt.Errorf("--parent can't be combined with --list: move the reminder first, then set its parent")
+			}
+			parentID, err := resolveParentID(updateParent, r, findReminderByID)
+			if err != nil {
+				return err
+			}
+			updates["parent_id"] = parentID // unchanged is a no-op
 		}
 		// --remind-me replaces only time alarms; --location replaces only
 		// location alarms. Each preserves the other kind.
@@ -206,6 +221,7 @@ func init() {
 	updateCmd.Flags().StringVar(&updateAddTagsBulk, "add-tags", "", "Add comma-separated native tags")
 	updateCmd.Flags().StringVar(&updateRemoveTagsBulk, "remove-tags", "", "Remove comma-separated native tags")
 	updateCmd.Flags().StringVarP(&updateList, "list", "l", "", "Move reminder to a different list")
+	updateCmd.Flags().StringVar(&updateParent, "parent", "", "Make it a subtask of this reminder (ID or prefix, same list); 'none' to make it top-level")
 	updateCmd.Flags().StringVarP(&updateRemindMe, "remind-me", "r", "", "Set alarm: duration before due (15m, 1h, 2d), 'none' to clear")
 	updateCmd.Flags().StringVar(&updateLocation, "location", "", "Geofence trigger coordinates: \"lat,lng\", 'none' to clear")
 	updateCmd.Flags().Float64Var(&updateRadius, "radius", 0, "Geofence radius in meters (default: system minimum)")
@@ -217,6 +233,23 @@ func init() {
 	updateCmd.Flags().BoolVarP(&updateForce, "yes", "y", false, "Skip the shared-list move confirmation (alias for --force)")
 
 	rootCmd.AddCommand(updateCmd)
+}
+
+// resolveParentID turns a --parent value into the parent's full ID, or ""
+// for "none". Lookup errors (not found, ambiguous prefix) pass through, so a
+// prefix never resolves to a guess.
+func resolveParentID(value string, child *reminder.Reminder, lookup func(string) (*reminder.Reminder, error)) (string, error) {
+	if value == "" || value == "none" {
+		return "", nil
+	}
+	parent, err := lookup(value)
+	if err != nil {
+		return "", fmt.Errorf("parent: %w", err)
+	}
+	if parent.ID == child.ID {
+		return "", fmt.Errorf("a reminder can't be its own parent")
+	}
+	return parent.ID, nil
 }
 
 // dropAlarmsForAllDay removes "at the due time" alarms when the updates turn

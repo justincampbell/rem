@@ -52,6 +52,7 @@ type JSONReminder struct {
 	Completed        bool                 `json:"completed"`
 	URL              string               `json:"url,omitempty"`
 	Tags             []string             `json:"tags,omitempty"`
+	ParentID         string               `json:"parent_id,omitempty"` // export only: import creates new IDs
 	Recurring        bool                 `json:"recurring,omitempty"`
 	RecurrenceRules  []JSONRecurrenceRule `json:"recurrence_rules,omitempty"`
 	Alarms           []JSONAlarm          `json:"alarms"`
@@ -101,6 +102,7 @@ func ToJSON(r *reminder.Reminder) JSONReminder {
 		Completed:        r.Completed,
 		URL:              r.URL,
 		Tags:             r.Tags,
+		ParentID:         r.ParentID,
 		Recurring:        r.Recurring,
 		Alarms:           []JSONAlarm{},
 	}

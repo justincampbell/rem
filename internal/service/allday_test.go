@@ -25,6 +25,13 @@ func TestFromEventKitReminderAllDay(t *testing.T) {
 	}
 }
 
+func TestFromEventKitReminderParentID(t *testing.T) {
+	r := fromEventKitReminder(&reminders.Reminder{ID: "CHILD", ParentID: "PARENT"})
+	if r.ParentID != "PARENT" {
+		t.Errorf("ParentID = %q, want PARENT", r.ParentID)
+	}
+}
+
 func TestAmbiguousIDFromEventKit(t *testing.T) {
 	ekErr := &reminders.AmbiguousIDError{
 		Prefix: "4",

@@ -285,6 +285,10 @@ func (s *ReminderService) UpdateReminder(id string, updates map[string]any) erro
 		case "list":
 			v := value.(string)
 			input.ListName = &v
+		case "parent_id":
+			// A full reminder ID nests this one under it; "" makes it top-level.
+			v := value.(string)
+			input.ParentID = &v
 		case "alarms":
 			if value == nil {
 				empty := []reminders.Alarm{}
@@ -512,6 +516,7 @@ func fromEventKitReminder(r *reminders.Reminder) *reminder.Reminder {
 		Flagged:          r.Flagged,
 		URL:              r.URL,
 		Tags:             append([]string(nil), r.Tags...),
+		ParentID:         r.ParentID,
 		Recurring:        r.Recurring,
 		HasAlarms:        r.HasAlarms,
 	}

@@ -170,6 +170,9 @@ func printReminderRichDetail(w io.Writer, r *reminder.Reminder) {
 	fmt.Fprintf(w, "%s %s\n", bold("Name:"), r.Name)
 	fmt.Fprintf(w, "%s %s\n", bold("ID:"), r.ID)
 	fmt.Fprintf(w, "%s %s\n", bold("List:"), cyan(r.ListName))
+	if r.ParentID != "" {
+		fmt.Fprintf(w, "%s subtask of %s\n", bold("Parent:"), r.ParentID)
+	}
 
 	if r.Body != "" {
 		fmt.Fprintf(w, "%s %s\n", bold("Notes:"), r.Body)

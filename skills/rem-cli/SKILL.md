@@ -60,6 +60,7 @@ Do NOT use rem for:
 | "flag / unflag X" | `rem flag <short-id>...` or `rem unflag <short-id>...` (supports multiple IDs) |
 | "show me flagged stuff" | `rem list --flagged` |
 | "move X to list Y" | `rem update <short-id> --list "Y"` (if Y or source is shared: confirm with user first, then `-f` — see gotchas) |
+| "make X a subtask of Y" / "nest X under Y" | `rem update <X-id> --parent <Y-id>` (same list; `--parent none` to un-nest) — see subtasks section |
 | "change priority to high" | `rem update <short-id> --priority high` |
 | "add notes to X" | `rem update <short-id> --notes "..."` |
 | "tag this as work" / "add tags" | `rem add "Task #work"` or `rem update <short-id> --add-tags "work,urgent"` |
@@ -107,6 +108,17 @@ A due date with no time of day is saved as a true all-day reminder (Reminders.ap
 - `rem update AB12 --due monday` on an all-day reminder keeps it all-day; give a time (`--due "monday 2pm"`) to make it timed
 - JSON output marks all-day reminders with `"due_all_day": true`. That reflects how Reminders.app displays the reminder, so a reminder the app shows at 12:00 AM (and overdue) reads as timed even if another tool marked it all-day.
 - To repair a reminder the app shows at 12:00 AM when it should be all-day, run `rem update <id> --all-day`. It keeps the date and removes the midnight "at due time" alarm.
+
+## Subtasks
+
+Reminders.app subtasks (one reminder indented under another) are read and written through a private ReminderKit API, since public EventKit has none.
+
+- `rem update <child-id> --parent <parent-id>` nests the child under the parent. Running it again is a no-op; pointing at a different parent re-parents directly.
+- `rem update <child-id> --parent none` makes it top-level again, in the same list.
+- JSON output (`rem show`, `rem list`, etc.) has `"parent_id": "<full parent ID>"` on subtasks and omits it on top-level reminders. `rem show` prints a `Parent:` line.
+- Reminders allows one level, so rem refuses to nest under a reminder that is itself a subtask, or to nest a reminder that has subtasks of its own. The parent must be in the same list. `--parent` can't be combined with `--list`: move first, then nest.
+- Open and completed reminders can both be nested.
+- To check that a build supports this, look for `--parent` in `rem update --help`.
 
 ## Notifications default to ON
 

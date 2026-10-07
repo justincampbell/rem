@@ -29,8 +29,8 @@ func TestAmbiguousIDFromEventKit(t *testing.T) {
 	ekErr := &reminders.AmbiguousIDError{
 		Prefix: "4",
 		Candidates: []reminders.Reminder{
-			{ID: "4AAAAAAA-1111", Title: "Email board", List: "Rebels FC"},
-			{ID: "4BBBBBBB-2222", Title: "Steam headband", List: "Inbox"},
+			{ID: "4AAAAAAA-1111", Title: "Buy milk", List: "Work"},
+			{ID: "4BBBBBBB-2222", Title: "Call plumber", List: "Inbox"},
 		},
 	}
 
@@ -41,7 +41,7 @@ func TestAmbiguousIDFromEventKit(t *testing.T) {
 	}
 
 	msg := err.Error()
-	for _, want := range []string{`"4"`, "2 reminders", "4AAAAAAA", "Email board", "Rebels FC", "4BBBBBBB", "Steam headband", "Inbox"} {
+	for _, want := range []string{`"4"`, "2 reminders", "4AAAAAAA", "Buy milk", "Work", "4BBBBBBB", "Call plumber", "Inbox"} {
 		if !strings.Contains(msg, want) {
 			t.Errorf("error message missing %q:\n%s", want, msg)
 		}

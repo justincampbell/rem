@@ -239,6 +239,9 @@ func printReminderPlainDetail(w io.Writer, r *reminder.Reminder) {
 	fmt.Fprintf(w, "Name: %s\n", r.Name)
 	fmt.Fprintf(w, "ID: %s\n", r.ID)
 	fmt.Fprintf(w, "List: %s\n", r.ListName)
+	if r.ParentID != "" {
+		fmt.Fprintf(w, "Parent: subtask of %s\n", r.ParentID)
+	}
 	if r.Body != "" {
 		fmt.Fprintf(w, "Notes: %s\n", r.Body)
 	}

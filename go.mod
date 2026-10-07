@@ -48,4 +48,4 @@ require (
 	golang.org/x/text v0.23.0 // indirect
 )
 
-replace github.com/BRO3886/go-eventkit => github.com/justincampbell/go-eventkit v0.15.1-0.20260929145441-57f3f8608d4d
+replace github.com/BRO3886/go-eventkit => github.com/justincampbell/go-eventkit v0.15.1-0.20261007201127-ba99ad106960
